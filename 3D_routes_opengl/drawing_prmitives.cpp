@@ -25,14 +25,14 @@ void generateSphere(float radius, int sectors, int stacks, glm::vec3 Pos, std::v
             // vertex position (x, y, z)
             x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
             y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
-            sphereVertices.push_back(x + Pos.x);
-            sphereVertices.push_back(y + Pos.y);
-            sphereVertices.push_back(z + Pos.z);
+            sphereVertices.push_back(x);
+            sphereVertices.push_back(y);
+            sphereVertices.push_back(z);
 
             // normalized vertex normal (nx, ny, nz)
-            nx = x * lengthInv + Pos.x;
-            ny = y * lengthInv + Pos.y;
-            nz = z * lengthInv + Pos.z;
+            nx = x * lengthInv;
+            ny = y * lengthInv;
+            nz = z * lengthInv;
             sphereVertices.push_back(nx);
             sphereVertices.push_back(ny);
             sphereVertices.push_back(nz);

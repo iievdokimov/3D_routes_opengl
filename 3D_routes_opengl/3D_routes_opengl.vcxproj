@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\AvoidanceModule\AvoidanceModule;C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\3D_routes_opengl\glm;C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\3D_routes_opengl\glfw-3.4.bin.WIN64\include;C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\3D_routes_opengl\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,6 +123,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\AvoidanceModule\AvoidanceModule;C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\3D_routes_opengl\glm;C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\3D_routes_opengl\glfw-3.4.bin.WIN64\include;C:\Users\Илья\Desktop\LIPTM\DynamicObstacles\Cpp_version\3D_routes_opengl\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

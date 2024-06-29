@@ -16,6 +16,7 @@ FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& shi
 	generateSphere(ship.rad(), sectors, stacks, controlledObjectPosition, controlledObjectVertices, controlledObjectIndices);
 
 	// trajectory
+	std::cout << "traj len: " << trajectory.size() << std::endl;
 	for (int i = 1; i < trajectory.size(); ++i) {
 		trajectoryVertices.push_back(trajectory[i - 1].x());
 		trajectoryVertices.push_back(trajectory[i - 1].y());
@@ -34,6 +35,58 @@ FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& shi
 
 }
 
+
+Scene::Scene(unsigned int frames) {
+	cur_frame_id = 0;
+	max_frame_id = frames;
+
+	double data_radius = 400;
+	Test test(data_radius);
+	Task task = test.get_random_task();
+
+	TrajectoryBuilder builder(task, Hyperparams());
+	
+	// gen obj
+	Obstacle object(task.ship().pos(), task.ship().vel(), task.ship().rad(), task.ship().type(), task.ship().id());
+
+
+	// target
+	double reached_rad = builder.get_hyperparams().target_reached_rad;
+	Vector target = task.target();
+	Obstacle reach_target(target, {}, reached_rad, ModelType::static_obst, -2);
+
+	std::vector<Vector> object_traj;
+	object_traj.push_back(object.pos());
+	object_traj.push_back(object.pos());
+
+	// gen frames
+	FrameData frame = FrameData(builder.get_obst_list(), object, reach_target, object_traj);
+	frame_list.push_back(frame);
+	for (int i = 0; i < max_frame_id; ++i) {
+		builder.next_step();
+
+		
+		object = Obstacle(builder.get_ship().pos(), builder.get_ship().vel(), builder.get_ship().rad(),
+			builder.get_ship().type(), builder.get_ship().id());
+
+		object_traj.push_back(object.pos());
+		FrameData frame = FrameData(builder.get_obst_list(), object, reach_target, object_traj);
+		frame_list.push_back(frame);
+	}
+
+}
+
+void Scene::prev_frame()
+{
+	if (cur_frame_id == 0) {
+		return;
+	}
+	cur_frame_id--;
+}
+
+
+
+/*
 Scene::Scene(unsigned int frames){
 	cur_frame_id = 0;
 	max_frame_id = frames;
@@ -84,3 +137,4 @@ Scene::Scene(unsigned int frames){
 	}
 
 }
+*/

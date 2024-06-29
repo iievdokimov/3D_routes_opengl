@@ -12,6 +12,9 @@
 #include "drawing_primitives.h"
 
 #include "models.h"
+#include "test_tools.h"
+#include "task.h"
+#include "config.h"
 
 
 class FrameData {
@@ -45,10 +48,12 @@ public:
 
 class Scene {
 public:
-	Scene(unsigned int frames = 100);
+	Scene(unsigned int frames = 1000);
 	
 	const FrameData& cur_frame() const { return frame_list[cur_frame_id]; }
+	unsigned int get_frame_id() const { return cur_frame_id; }
 	void next_frame() { cur_frame_id = std::min(max_frame_id - 1, cur_frame_id + 1); }
+	void prev_frame();
 
 
 private:

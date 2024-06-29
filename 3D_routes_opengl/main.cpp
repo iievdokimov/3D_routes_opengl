@@ -71,15 +71,11 @@ GLFWwindow* initializeWindow(int width, int height, const char* title) {
 }
 
 
-
-void refreshScene(Scene& scene) {
-    scene.next_frame();
-}
-
+GLfloat cameraSpeed = 100.5f * deltaTime;
 
 // Function to handle keyboard input
 void processInput(GLFWwindow* window, Scene& scene) {
-    GLfloat cameraSpeed = 10.5f * deltaTime;
+    
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -88,13 +84,20 @@ void processInput(GLFWwindow* window, Scene& scene) {
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        std::cout << "Space pressed" << std::endl;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        cameraSpeed = 15 * 100.5f * deltaTime;
+    else {
+        cameraSpeed = 100.5f * deltaTime;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS or glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        std::cout << "Frame: " << scene.get_frame_id() << std::endl;
         std::cout << cameraPos.x << " " << cameraPos.y << " " << cameraPos.z << std::endl;
-        //initialCameraPos = cameraPos;
-        refreshScene(scene);
-       // cameraPos = initialCameraPos;
-        std::cout << cameraPos.x << "-" << cameraPos.y << "-" << cameraPos.z << std::endl;
+        scene.next_frame();
+    }
+    else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        std::cout << "Frame: " << scene.get_frame_id() << std::endl;
+        scene.prev_frame();
     }
 }
 
@@ -156,13 +159,27 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 
 
-void handleSpacebarPress(Scene& scene) {
-    // Recreate spheres with updated centers
-    refreshScene(scene);
+void initializeTrajectoryBuffer(GLuint& trajectoryVAO, GLuint& trajectoryVBO, const std::vector<GLfloat>& trajectoryVertices) {
+    glGenVertexArrays(1, &trajectoryVAO);
+    glGenBuffers(1, &trajectoryVBO);
+
+    glBindVertexArray(trajectoryVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, trajectoryVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW); // Изначально буфер пустой
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }
 
 
-
+void updateTrajectoryBuffer(GLuint& trajectoryVBO, const std::vector<GLfloat>& trajectoryVertices) {
+    glBindBuffer(GL_ARRAY_BUFFER, trajectoryVBO);
+    glBufferData(GL_ARRAY_BUFFER, trajectoryVertices.size() * sizeof(GLfloat), &trajectoryVertices[0], GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
 
 int main() {
@@ -173,7 +190,7 @@ int main() {
 
 
     std::cout << "not Created scene" << std::endl;
-    Scene scene(100);
+    Scene scene(300);
 
     std::cout << "Created scene" << std::endl;
 
@@ -252,22 +269,10 @@ int main() {
 
     std::cout << "Init target" << std::endl;
 
-
+        
     // VAO и VBO для траектории
-    GLuint trajectoryVAO, trajectoryVBO;
-    glGenVertexArrays(1, &trajectoryVAO);
-    glGenBuffers(1, &trajectoryVBO);
-
-    glBindVertexArray(trajectoryVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, trajectoryVBO);
-    glBufferData(GL_ARRAY_BUFFER, scene.cur_frame().trajectoryVertices.size() * sizeof(GLfloat), &scene.cur_frame().trajectoryVertices[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(0);
-
+    GLuint trajectoryVAO,  trajectoryVBO;
+    initializeTrajectoryBuffer(trajectoryVAO, trajectoryVBO, scene.cur_frame().trajectoryVertices);
     std::cout << "Init traj" << std::endl;
 
     // Generate grid
@@ -313,7 +318,7 @@ int main() {
         ourShader.use();
 
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)WIDTH / (float)HEIGHT, 0.1f, 10000.0f);
 
         GLint modelLoc = glGetUniformLocation(ourShader.ID, "model");
         GLint viewLoc = glGetUniformLocation(ourShader.ID, "view");
@@ -339,6 +344,7 @@ int main() {
         glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);  // Белый цвет для препятствий
         for (int i = 0; i < scene.cur_frame().spherePositions.size(); ++i) {
             glm::mat4 sphereModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().spherePositions[i]);
+            //glm::mat4 sphereModel = glm::mat4(1.0f);
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(sphereModel));
             glDrawElements(GL_TRIANGLES, scene.cur_frame().sphereIndices.size(), GL_UNSIGNED_INT, 0);
         }
@@ -363,11 +369,14 @@ int main() {
         glUniform3f(colorLoc, 0.0f, 1.0f, 0.0f);  // Зеленый цвет для целевой позиции
 
         glm::mat4 targetModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().targetPosition);
+        //glm::mat4 targetModel = glm::mat4(1.0f);
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(targetModel));
         glDrawElements(GL_TRIANGLES, scene.cur_frame().targetIndices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         // Draw the trajectory
+        updateTrajectoryBuffer(trajectoryVBO, scene.cur_frame().trajectoryVertices);
+
         glm::mat4 trajModel = glm::mat4(1.0f);
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(trajModel));
 
