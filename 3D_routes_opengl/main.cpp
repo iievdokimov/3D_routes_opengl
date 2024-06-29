@@ -13,10 +13,6 @@
 #include "drawing_primitives.h"
 #include "scene.h"
 
-#include "algorithm_base.h"
-
-
-TrajectoryBuilder TB;
 
 
 // Window dimensions
@@ -170,27 +166,28 @@ void handleSpacebarPress(Scene& scene) {
 
 
 int main() {
-    GLFWwindow* window = initializeWindow(WIDTH, HEIGHT, "3D Sphere with Grid");
+    std::cout << "In main" << std::endl;
+    GLFWwindow* window = initializeWindow(WIDTH, HEIGHT, "3D Scene");
 
     Shader ourShader("../shaders/default.vs", "../shaders/default.fs");
 
-    
 
-    Scene scene(20);
+    std::cout << "not Created scene" << std::endl;
+    Scene scene(100);
 
+    std::cout << "Created scene" << std::endl;
 
+    GLuint obstVAO, obstVBO, obstEBO;
+    glGenVertexArrays(1, &obstVAO);
+    glGenBuffers(1, &obstVBO);
+    glGenBuffers(1, &obstEBO);
 
-    GLuint VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glBindVertexArray(obstVAO);
 
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, obstVBO);
     glBufferData(GL_ARRAY_BUFFER, scene.cur_frame().sphereVertices.size() * sizeof(GLfloat), &scene.cur_frame().sphereVertices[0], GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obstEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, scene.cur_frame().sphereIndices.size() * sizeof(GLuint), &scene.cur_frame().sphereIndices[0], GL_STATIC_DRAW);
 
     // Vertex positions
@@ -201,6 +198,77 @@ int main() {
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
+
+    std::cout << "Init obsts" << std::endl;
+
+    // VAO, VBO и EBO для Object
+    GLuint controlledObjectVAO, controlledObjectVBO, controlledObjectEBO;
+    glGenVertexArrays(1, &controlledObjectVAO);
+    glGenBuffers(1, &controlledObjectVBO);
+    glGenBuffers(1, &controlledObjectEBO);
+
+    glBindVertexArray(controlledObjectVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, controlledObjectVBO);
+    glBufferData(GL_ARRAY_BUFFER, scene.cur_frame().controlledObjectVertices.size() * sizeof(GLfloat), &scene.cur_frame().controlledObjectVertices[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, controlledObjectEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, scene.cur_frame().controlledObjectIndices.size() * sizeof(GLuint), &scene.cur_frame().controlledObjectIndices[0], GL_STATIC_DRAW);
+
+    // Vertex positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    // Vertex normals
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    std::cout << "Init obj" << std::endl;
+
+
+    // VAO, VBO и EBO для Target
+    GLuint targetVAO, targetVBO, targetEBO;
+    glGenVertexArrays(1, &targetVAO);
+    glGenBuffers(1, &targetVBO);
+    glGenBuffers(1, &targetEBO);
+
+    glBindVertexArray(targetVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, targetVBO);
+    glBufferData(GL_ARRAY_BUFFER, scene.cur_frame().targetVertices.size() * sizeof(GLfloat), &scene.cur_frame().targetVertices[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, controlledObjectEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, scene.cur_frame().targetIndices.size() * sizeof(GLuint), &scene.cur_frame().targetIndices[0], GL_STATIC_DRAW);
+
+    // Vertex positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    // Vertex normals
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    std::cout << "Init target" << std::endl;
+
+
+    // VAO и VBO для траектории
+    GLuint trajectoryVAO, trajectoryVBO;
+    glGenVertexArrays(1, &trajectoryVAO);
+    glGenBuffers(1, &trajectoryVBO);
+
+    glBindVertexArray(trajectoryVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, trajectoryVBO);
+    glBufferData(GL_ARRAY_BUFFER, scene.cur_frame().trajectoryVertices.size() * sizeof(GLfloat), &scene.cur_frame().trajectoryVertices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    std::cout << "Init traj" << std::endl;
 
     // Generate grid
     std::vector<GLfloat> gridVertices;
@@ -228,6 +296,9 @@ int main() {
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
+
+    std::cout << "All Init ok!" << std::endl;
+
     while (!glfwWindowShouldClose(window)) {
         // Calculate delta time
         GLfloat currentFrame = glfwGetTime();
@@ -247,6 +318,7 @@ int main() {
         GLint modelLoc = glGetUniformLocation(ourShader.ID, "model");
         GLint viewLoc = glGetUniformLocation(ourShader.ID, "view");
         GLint projLoc = glGetUniformLocation(ourShader.ID, "projection");
+        GLint colorLoc = glGetUniformLocation(ourShader.ID, "objectColor");
 
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -254,33 +326,63 @@ int main() {
         // Draw the grid
         glm::mat4 gridModel = glm::mat4(1.0f);
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(gridModel));
+        glUniform3f(colorLoc, 0.5f, 0.5f, 0.5f);  // Серый цвет для сетки
 
         glBindVertexArray(gridVAO);
         glDrawArrays(GL_LINES, 0, gridVertices.size() / 3);
         glBindVertexArray(0);
+        
+        //std::cout << "Grid ok!" << std::endl;
 
-        // Draw all spheres
-        glBindVertexArray(VAO);
+        // Draw obstacles
+        glBindVertexArray(obstVAO);
+        glUniform3f(colorLoc, 1.0f, 1.0f, 1.0f);  // Белый цвет для препятствий
         for (int i = 0; i < scene.cur_frame().spherePositions.size(); ++i) {
-            // Вычисляем матрицу модели для текущей сферы (например, сдвигаем на разные позиции)
             glm::mat4 sphereModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().spherePositions[i]);
-
-            // Передаем матрицы в шейдерную программу
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(sphereModel));
-
-            // Рисуем сферу
             glDrawElements(GL_TRIANGLES, scene.cur_frame().sphereIndices.size(), GL_UNSIGNED_INT, 0);
         }
+        glBindVertexArray(0);
 
+        //std::cout << "Obsts ok!" << std::endl;
+
+        // Draw controlled object
+        glBindVertexArray(controlledObjectVAO);
+        glUniform3f(colorLoc, 0.0f, 0.0f, 1.0f);  // Синий цвет для объекта управления
+
+        glm::mat4 controlledObjectModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().controlledObjectPosition);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(controlledObjectModel));
+        glDrawElements(GL_TRIANGLES, scene.cur_frame().controlledObjectIndices.size(), GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(0);
+        
+        //std::cout << "Obj ok!" << std::endl;
+
+        // Draw target
+        glBindVertexArray(targetVAO);
+        glUniform3f(colorLoc, 0.0f, 1.0f, 0.0f);  // Зеленый цвет для целевой позиции
+
+        glm::mat4 targetModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().targetPosition);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(targetModel));
+        glDrawElements(GL_TRIANGLES, scene.cur_frame().targetIndices.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // Draw the trajectory
+        glm::mat4 trajModel = glm::mat4(1.0f);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(trajModel));
+
+        glBindVertexArray(trajectoryVAO);
+        glUniform3f(colorLoc, 1.0f, 0.7f, 0.3f);  // Оранжевый цвет для траектории
+        glDrawArrays(GL_LINES, 0, scene.cur_frame().trajectoryVertices.size() / 3);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &controlledObjectVAO);
+    glDeleteBuffers(1, &controlledObjectVBO);
+    glDeleteBuffers(1, &controlledObjectEBO);
 
     glDeleteVertexArrays(1, &gridVAO);
     glDeleteBuffers(1, &gridVBO);
