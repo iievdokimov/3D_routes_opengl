@@ -3,10 +3,15 @@
 
 // Function to generate sphere data
 void generateSphere(float radius, int sectors, int stacks, glm::vec3 Pos, std::vector<GLfloat>& sphereVertices, std::vector<GLuint>& sphereIndices) {
+    // TODO:
+    // remove rads and positions
+    radius = 1;
+    
+    
     float x, y, z, xy;                              // vertex position
     float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
     float s, t;                                     // texCoord
-
+    
     double M_PI = 3.141592;
     float sectorStep = 2 * M_PI / sectors;
     float stackStep = M_PI / stacks;

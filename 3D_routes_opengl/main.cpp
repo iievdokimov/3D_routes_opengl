@@ -91,7 +91,7 @@ int main() {
 
 
     std::cout << "not Created scene" << std::endl;
-    Scene scene(300);
+    Scene scene(100);
 
     std::cout << "Created scene" << std::endl;
 
@@ -265,6 +265,8 @@ int main() {
         for (int i = 0; i < scene.cur_frame().spherePositions.size(); ++i) {
             glm::mat4 sphereModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().spherePositions[i]);
             //glm::mat4 sphereModel = glm::mat4(1.0f);
+            float radius = scene.cur_frame().sphereRads[i];
+            sphereModel = glm::scale(sphereModel, glm::vec3(radius, radius, radius));
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(sphereModel));
             glDrawElements(GL_TRIANGLES, scene.cur_frame().sphereIndices.size(), GL_UNSIGNED_INT, 0);
         }
@@ -275,8 +277,9 @@ int main() {
         // Draw controlled object
         glBindVertexArray(controlledObjectVAO);
         glUniform3f(colorLoc, 0.0f, 0.0f, 1.0f);  // Синий цвет для объекта управления
-
         glm::mat4 controlledObjectModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().controlledObjectPosition);
+        float obj_radius = scene.cur_frame().controlledObjectRad;
+        controlledObjectModel = glm::scale(controlledObjectModel, glm::vec3(obj_radius, obj_radius, obj_radius));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(controlledObjectModel));
         glDrawElements(GL_TRIANGLES, scene.cur_frame().controlledObjectIndices.size(), GL_UNSIGNED_INT, 0);
 
@@ -290,6 +293,9 @@ int main() {
 
         glm::mat4 targetModel = glm::translate(glm::mat4(1.0f), scene.cur_frame().targetPosition);
         //glm::mat4 targetModel = glm::mat4(1.0f);
+        float target_radius = scene.cur_frame().targetRad;
+        targetModel = glm::scale(targetModel, glm::vec3(target_radius, target_radius, target_radius));
+
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(targetModel));
         glDrawElements(GL_TRIANGLES, scene.cur_frame().targetIndices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);

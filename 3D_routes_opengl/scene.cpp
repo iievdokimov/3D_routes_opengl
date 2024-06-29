@@ -9,11 +9,13 @@ FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& shi
 		glm::vec3 pos(obst_list[i].pos().x(), obst_list[i].pos().y(), obst_list[i].pos().z());
 		generateSphere(obst_list[i].rad(), sectors, stacks, pos, sphereVertices, sphereIndices);
 		spherePositions.push_back(pos);
+		sphereRads.push_back(obst_list[i].rad());
 	}
 
 	// controlled object
 	controlledObjectPosition = glm::vec3(ship.pos().x(), ship.pos().y(), ship.pos().z());
 	generateSphere(ship.rad(), sectors, stacks, controlledObjectPosition, controlledObjectVertices, controlledObjectIndices);
+	controlledObjectRad = ship.rad();
 
 	// trajectory
 	std::cout << "traj len: " << trajectory.size() << std::endl;
@@ -30,6 +32,7 @@ FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& shi
 	// target
 	targetPosition = glm::vec3(reach_target.pos().x(), reach_target.pos().y(), reach_target.pos().z());
 	generateSphere(reach_target.rad(), sectors, stacks, targetPosition, targetVertices, targetIndices);
+	targetRad = reach_target.rad();
 
 	// vel-ratings
 

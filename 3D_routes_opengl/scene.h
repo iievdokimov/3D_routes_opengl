@@ -27,16 +27,20 @@ public:
 	std::vector<GLfloat> sphereVertices;
 	std::vector<GLuint> sphereIndices;
 	std::vector<glm::vec3> spherePositions;
+	std::vector<GLfloat> sphereRads;
 
 	// Controlled Object data
 	std::vector<GLfloat> controlledObjectVertices;
 	std::vector<GLuint> controlledObjectIndices;
 	glm::vec3 controlledObjectPosition;
+	GLfloat controlledObjectRad;
 
 	// Target data
 	std::vector<GLfloat> targetVertices;
 	std::vector<GLuint> targetIndices;
 	glm::vec3 targetPosition;
+	GLfloat targetRad;
+
 
 	// Trajectory data
 	std::vector<GLfloat> trajectoryVertices;
