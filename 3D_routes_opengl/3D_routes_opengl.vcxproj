@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="drawing_prmitives.cpp" />
     <ClCompile Include="grid.cpp" />
+    <ClCompile Include="handle_input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="shader.cpp" />

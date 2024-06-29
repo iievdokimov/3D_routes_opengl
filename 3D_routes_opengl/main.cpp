@@ -12,30 +12,12 @@
 #include "grid.h"
 #include "drawing_primitives.h"
 #include "scene.h"
-
+#include "handle_input.h"
 
 
 // Window dimensions
 const GLuint WIDTH = 1800, HEIGHT = 1000;
 
-// Camera
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-GLfloat deltaTime = 0.1f;  // Time between current frame and last frame
-GLfloat lastFrame = 0.0f;  // Time of last frame
-
-// Mouse control
-bool firstMouse = true;
-float yaw = -90.0f;  // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right
-float pitch = 0.0f;
-float lastX = WIDTH / 2.0;
-float lastY = HEIGHT / 2.0;
-float fov = 45.0f;
-
-
-// Mouse button state
-bool mouseButtonPressed = false;
 
 // Function to initialize GLFW and GLEW, and create a window
 GLFWwindow* initializeWindow(int width, int height, const char* title) {
@@ -71,90 +53,9 @@ GLFWwindow* initializeWindow(int width, int height, const char* title) {
 }
 
 
-GLfloat cameraSpeed = 100.5f * deltaTime;
 
-// Function to handle keyboard input
-void processInput(GLFWwindow* window, Scene& scene) {
-    
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        cameraSpeed = 15 * 100.5f * deltaTime;
-    else {
-        cameraSpeed = 100.5f * deltaTime;
-    }
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS or glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        std::cout << "Frame: " << scene.get_frame_id() << std::endl;
-        std::cout << cameraPos.x << " " << cameraPos.y << " " << cameraPos.z << std::endl;
-        scene.next_frame();
-    }
-    else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        std::cout << "Frame: " << scene.get_frame_id() << std::endl;
-        scene.prev_frame();
-    }
-}
 
-// Function to handle mouse movement
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (mouseButtonPressed) {
-        if (firstMouse) {
-            lastX = xpos;
-            lastY = ypos;
-            firstMouse = false;
-        }
-
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos;  // reversed since y-coordinates go from bottom to top
-        lastX = xpos;
-        lastY = ypos;
-
-        float sensitivity = 0.1f;
-        xoffset *= sensitivity;
-        yoffset *= sensitivity;
-
-        yaw += xoffset;
-        pitch += yoffset;
-
-        if (pitch > 89.0f)
-            pitch = 89.0f;
-        if (pitch < -89.0f)
-            pitch = -89.0f;
-
-        glm::vec3 front;
-        front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        front.y = sin(glm::radians(pitch));
-        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        cameraFront = glm::normalize(front);
-    }
-}
-
-// Function to handle mouse scroll
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (fov >= 1.0f && fov <= 45.0f)
-        fov -= yoffset;
-    if (fov <= 1.0f)
-        fov = 1.0f;
-    if (fov >= 45.0f)
-        fov = 45.0f;
-}
-
-// Function to handle mouse button input
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        mouseButtonPressed = true;
-    }
-    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-        mouseButtonPressed = false;
-        firstMouse = true;  // Reset the firstMouse flag to avoid a jump when pressing again
-    }
-}
 
 
 
@@ -295,11 +196,31 @@ int main() {
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
+    
+
+    // Init camera & mouse
+    CameraState camera;
+    MouseState mouse;
 
     // Set the required callback functions
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    WindowData windowData = { mouse, camera };
+    glfwSetWindowUserPointer(window, &windowData);
+
+    glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
+        WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        mouse_callback(window, data->mouseState, data->cameraState, xpos, ypos);
+        });
+
+
+    glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
+        WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        scroll_callback(window, data->mouseState, xoffset, yoffset);
+        });
+
+    glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+        WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+        mouse_button_callback(window, data->mouseState, button, action, mods);
+        });
 
 
     std::cout << "All Init ok!" << std::endl;
@@ -307,18 +228,17 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         // Calculate delta time
         GLfloat currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        camera.setTime(currentFrame - camera.lastFrame(), currentFrame);
 
-        processInput(window, scene);
+        processInput(window, scene, camera);
 
         glClearColor(0.1f, 0.1f, 0.1f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ourShader.use();
 
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)WIDTH / (float)HEIGHT, 0.1f, 10000.0f);
+        glm::mat4 view = glm::lookAt(camera.cameraPos(), camera.cameraPos() + camera.cameraFront(), camera.cameraUp());
+        glm::mat4 projection = glm::perspective(glm::radians(mouse.getFov()), (float)WIDTH / (float)HEIGHT, 0.1f, 10000.0f);
 
         GLint modelLoc = glGetUniformLocation(ourShader.ID, "model");
         GLint viewLoc = glGetUniformLocation(ourShader.ID, "view");
