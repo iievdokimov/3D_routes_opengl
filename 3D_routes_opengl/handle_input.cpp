@@ -1,8 +1,9 @@
 #include "handle_input.h"
 
 CameraState::CameraState(){
-	camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
-	camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
+	//camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+	camera_pos = glm::vec3(400, 400, -800);
+	camera_front = glm::vec3(0.0f, 0.0f, 1.f);
 	camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
 	delta_time = 0.1f;
 	last_frame = 0.0f;
@@ -63,6 +64,7 @@ void processInput(GLFWwindow* window, Scene& scene, CameraState& camera)
 
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS or glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		std::cout << "Frame: " << scene.get_frame_id() << std::endl;
+		//std::cout << camera.cameraFront().x << " " << camera.cameraFront().y << " " << camera.cameraFront().z << std::endl;
 		std::cout << camera.cameraPos().x << " " << camera.cameraPos().y << " " << camera.cameraPos().z << std::endl;
 		scene.next_frame();
 	}

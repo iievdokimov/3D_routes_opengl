@@ -83,6 +83,28 @@ void updateTrajectoryBuffer(GLuint& trajectoryVBO, const std::vector<GLfloat>& t
 }
 
 
+
+// Velocities: Функция для создания VAO и VBO
+void createVelocitiesVAO(GLuint& VAO, GLuint& VBO) {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+}
+
+void updateVelocitiesBuffer(GLuint VBO, const std::vector<glm::vec3>& velocities) {
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, velocities.size() * sizeof(glm::vec3), velocities.data(), GL_DYNAMIC_DRAW);
+}
+
+
 int main() {
     std::cout << "In main" << std::endl;
     GLFWwindow* window = initializeWindow(WIDTH, HEIGHT, "3D Scene");
@@ -193,6 +215,11 @@ int main() {
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
+
+    // VAO VBO Velocities
+    GLuint velVAO, velVBO;
+    createVelocitiesVAO(velVAO, velVBO);
+
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
@@ -310,6 +337,25 @@ int main() {
         glUniform3f(colorLoc, 1.0f, 0.7f, 0.3f);  // Оранжевый цвет для траектории
         glDrawArrays(GL_LINES, 0, scene.cur_frame().trajectoryVertices.size() / 3);
         glBindVertexArray(0);
+
+
+        // Draw object's velocities
+        glBindVertexArray(velVAO);
+        for (size_t i = 0; i < scene.cur_frame().velocities.size(); ++i) {
+            std::vector<glm::vec3> vertices = { scene.cur_frame().velocities[i].start, 
+                scene.cur_frame().velocities[i].end };
+            glUniform3fv(colorLoc, 1, glm::value_ptr(scene.cur_frame().velColors[i]));
+
+            updateVelocitiesBuffer(velVBO, vertices);
+
+            glm::mat4 model = glm::mat4(1.0f);
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_LINES, 0, vertices.size());
+        }
+
+        glBindVertexArray(0);
+
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();

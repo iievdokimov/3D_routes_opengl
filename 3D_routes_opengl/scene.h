@@ -17,10 +17,17 @@
 #include "config.h"
 
 
+struct VertexPair {
+	glm::vec3 start;
+	glm::vec3 end;
+};
+
+
 class FrameData {
 public:
 	//const std::vector<GLfloat>& sphereVertices() const;
-	FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& ship, const Obstacle& reach_target, const std::vector<Vector> trajectory);
+	FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& ship, const Obstacle& reach_target, const std::vector<Vector> trajectory,
+		std::vector<std::pair<Vector, double>> vel_ratings);
 
 //private:
 	// Obsts data
@@ -44,6 +51,10 @@ public:
 
 	// Trajectory data
 	std::vector<GLfloat> trajectoryVertices;
+
+	// Object's velocities data
+	std::vector<VertexPair> velocities;
+	std::vector<glm::vec3> velColors;
 
 	// Grid data
 	std::vector<GLfloat> gridVertices;

@@ -1,7 +1,8 @@
 #include "scene.h"
 
 
-FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& ship, const Obstacle& reach_target, const std::vector<Vector> trajectory) {
+FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& ship, const Obstacle& reach_target, const std::vector<Vector> trajectory,
+	std::vector<std::pair<Vector, double>> vel_ratings) {
 	int sectors = 36, stacks = 18;
 	
 	// obsts
@@ -18,7 +19,6 @@ FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& shi
 	controlledObjectRad = ship.rad();
 
 	// trajectory
-	std::cout << "traj len: " << trajectory.size() << std::endl;
 	for (int i = 1; i < trajectory.size(); ++i) {
 		trajectoryVertices.push_back(trajectory[i - 1].x());
 		trajectoryVertices.push_back(trajectory[i - 1].y());
@@ -35,6 +35,35 @@ FrameData::FrameData(const std::vector<Obstacle>& obst_list, const Obstacle& shi
 	targetRad = reach_target.rad();
 
 	// vel-ratings
+	std::vector<glm::vec3> directions;
+	std::vector<glm::vec3> velocityColors;
+
+	for (const auto& ve : vel_ratings) {
+		double est = ve.second;
+		glm::vec3 vel_color(int(255 * est), int(255 * (1 - est)), 0);
+		Vector vel = ve.first;
+		glm::vec3 gvel(vel.x(), vel.y(), vel.z());
+		velocities.push_back({ controlledObjectPosition, controlledObjectPosition + gvel });
+		velColors.push_back(vel_color);
+	}
+
+	/*
+	std::vector<glm::vec3> directions = {
+		glm::vec3(25.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 25.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 25.0f)
+	};
+	std::vector<glm::vec3> velocityColors = {
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	};
+
+	
+	for (size_t i = 0; i < directions.size(); ++i) {
+		velocities.push_back({ controlledObjectPosition, controlledObjectPosition + directions[i] });
+		velColors.push_back(velocityColors[i]);
+	}*/
 
 }
 
@@ -63,17 +92,19 @@ Scene::Scene(unsigned int frames) {
 	object_traj.push_back(object.pos());
 
 	// gen frames
-	FrameData frame = FrameData(builder.get_obst_list(), object, reach_target, object_traj);
-	frame_list.push_back(frame);
+	//FrameData frame = FrameData(builder.get_obst_list(), object, reach_target, object_traj);
+	//frame_list.push_back(frame);
 	for (int i = 0; i < max_frame_id; ++i) {
 		builder.next_step();
 
+		builder.choose_velocity();
+		std::vector<std::pair<Vector, double>> vel_ratings = builder.get_vel_ratings();
 		
 		object = Obstacle(builder.get_ship().pos(), builder.get_ship().vel(), builder.get_ship().rad(),
 			builder.get_ship().type(), builder.get_ship().id());
 
 		object_traj.push_back(object.pos());
-		FrameData frame = FrameData(builder.get_obst_list(), object, reach_target, object_traj);
+		FrameData frame = FrameData(builder.get_obst_list(), object, reach_target, object_traj, vel_ratings);
 		frame_list.push_back(frame);
 	}
 
